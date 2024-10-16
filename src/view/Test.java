@@ -17,7 +17,6 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -33,8 +32,8 @@ public class Test extends JFrame {
 	private JTable table;
 	private JTree tree;
 	private JTextArea textArea;
-	private JTextField textField;
 	private JComboBox<String> comboBox;
+	private JComboBox<String> protocolComboBox;
 
 	private boolean isCapturing = true;
 	private boolean isSelectionEnabled = true;
@@ -49,48 +48,47 @@ public class Test extends JFrame {
 	}
 
 	private void initializeUI() {
+		setTitle("网络嗅探器");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(600, 400, 675, 369);
 		getContentPane().setLayout(null);
 
-		// 初始化表格
+		// Initialize table
 		initializeTable();
 
-		// 选择网卡
+		// Network interface selection
 		initializeDeviceComboBox();
 
-		// 过滤规则文本框
-		initializeFilterTextField();
+		// Filter protocol dropdown
+		initializeProtocolComboBox();
 
-		// 按钮部分
+		// Initialize buttons
 		initializeButtons();
 
-		// 信息栏
+		// Text area for packet info
 		initializeTextArea();
 
-		// 信息树
+		// Information tree
 		initializeTree();
 
-		// 清空按钮
+		// Clear button
 		initializeClearButton();
 
-		// 标签
+		// Label for protocol filter
 		initializeLabel();
 	}
 
 	private void initializeTable() {
-		// 定义列名称
 		Vector<String> columnNames = new Vector<>();
-		columnNames.add("编号");
-		columnNames.add("时间");
-		columnNames.add("长度");
-		columnNames.add("原MAC地址");
-		columnNames.add("目的MAC地址");
-		columnNames.add("协议");
-		columnNames.add("源IP地址");
-		columnNames.add("目的IP地址");
+		columnNames.add("编号"); // ID
+		columnNames.add("时间"); // Time
+		columnNames.add("长度"); // Length
+		columnNames.add("源IP地址"); // Source IP Address
+		columnNames.add("目的IP地址"); // Destination IP Address
+		columnNames.add("协议"); // Protocol
+		columnNames.add("源MAC地址"); // Source MAC Address
+		columnNames.add("目的MAC地址"); // Destination MAC Address
 
-		// 创建 DefaultTableModel 时使用列名称和初始行数 0
 		DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
 			private static final long serialVersionUID = 1L;
 
@@ -100,19 +98,16 @@ public class Test extends JFrame {
 			}
 		};
 
-		// 创建 JTable 并设置模型
 		table = new JTable(model);
 		table.setBounds(22, 42, 356, 179);
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setBounds(22, 42, 616, 114);
 		getContentPane().add(scrollPane);
 
-		// 添加表格选择监听器
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				selectionCount++;
-				System.out.println(selectionCount);
 				handleTableSelection();
 			}
 		});
@@ -125,15 +120,14 @@ public class Test extends JFrame {
 		getContentPane().add(comboBox);
 	}
 
-	private void initializeFilterTextField() {
-		textField = new JTextField();
-		textField.setBounds(305, 11, 66, 21);
-		getContentPane().add(textField);
-		textField.setColumns(10);
+	private void initializeProtocolComboBox() {
+		String[] protocols = { "All", "TCP", "UDP", "ICMP", "Others" };
+		protocolComboBox = new JComboBox<>(protocols);
+		protocolComboBox.setBounds(305, 11, 80, 21);
+		getContentPane().add(protocolComboBox);
 	}
 
 	private void initializeButtons() {
-		// 开始按钮
 		JButton startButton = new JButton("开始");
 		startButton.addActionListener(new ActionListener() {
 			@Override
@@ -144,8 +138,7 @@ public class Test extends JFrame {
 		startButton.setBounds(395, 11, 71, 22);
 		getContentPane().add(startButton);
 
-		// 取消按钮
-		JButton cancelButton = new JButton("取消");
+		JButton cancelButton = new JButton("停止");
 		cancelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -186,7 +179,7 @@ public class Test extends JFrame {
 	}
 
 	private void initializeLabel() {
-		JLabel lblFilter = new JLabel("过滤规则");
+		JLabel lblFilter = new JLabel("过滤协议");
 		lblFilter.setBounds(241, 15, 54, 15);
 		getContentPane().add(lblFilter);
 	}
@@ -206,11 +199,9 @@ public class Test extends JFrame {
 								analyse.startClassify(packet);
 								LinkedHashMap<String, ArrayList<String>> info = analyse.getInfo();
 
-								// 构建树节点
 								DefaultMutableTreeNode top = new DefaultMutableTreeNode("第" + (index + 1) + "个数据包");
 								for (Iterator<Entry<String, ArrayList<String>>> it = info.entrySet().iterator(); it.hasNext();) {
 									Entry<String, ArrayList<String>> entry = it.next();
-									System.out.println(entry.getKey());
 									ArrayList<String> arrayList = entry.getValue();
 									top.add(new DefaultMutableTreeNode(entry.getKey() + ":"));
 									for (String s : arrayList) {
@@ -218,11 +209,8 @@ public class Test extends JFrame {
 									}
 								}
 
-								// 设置树模型
 								DefaultTreeModel treeModel = new DefaultTreeModel(top);
 								tree.setModel(treeModel);
-
-								// 显示包信息
 								textArea.setText(captor.showPacket(packet));
 							}
 						}
@@ -239,9 +227,7 @@ public class Test extends JFrame {
 		String chosenDevice = (String) comboBox.getSelectedItem();
 		chooseDeviceByName(chosenDevice);
 
-		String protocol = textField.getText();
-		System.out.println(protocol);
-
+		String protocol = (String) protocolComboBox.getSelectedItem();
 		captor.capturePackets();
 		Analyse analyse = new Analyse();
 
@@ -251,9 +237,7 @@ public class Test extends JFrame {
 				String selectedDevice = (String) comboBox.getSelectedItem();
 				chooseDeviceByName(selectedDevice);
 
-				String filterProtocol = textField.getText().trim();
-				System.out.println(filterProtocol);
-
+				String filterProtocol = (String) protocolComboBox.getSelectedItem();
 				captor.capturePackets();
 				Analyse packetAnalyse = new Analyse();
 
@@ -263,22 +247,25 @@ public class Test extends JFrame {
 				while (isCapturing) {
 					packets = captor.getPackets();
 					if (packets.size() > count) {
-						System.out.println("捕获到新数据包");
 						Packet packet = packets.get(count++);
 						String[] info = packetAnalyse.getInfo(packet);
 
-						// 过滤协议
-						if (filterProtocol.equals(info[4]) || filterProtocol.isEmpty()) {
+						// Apply protocol filter
+						if (filterProtocol.equals("All") || filterProtocol.equals(info[4])) {
 							result.add(packet);
 							num++;
 
 							Vector<Object> row = new Vector<>();
 							row.add(num);
-							for (int i = 0; i < 7; i++) {
-								row.add(info[i]);
-							}
+							row.add(info[0]); // Time
+							row.add(info[1]); // Length
+							row.add(info[5]); // Source IP Address
+							row.add(info[6]); // Destination IP Address
+							row.add(info[4]); // Protocol
+							row.add(info[2]); // Source MAC Address
+							row.add(info[3]); // Destination MAC Address
 
-							// 更新表格
+							// Update the table
 							EventQueue.invokeLater(new Runnable() {
 								@Override
 								public void run() {
