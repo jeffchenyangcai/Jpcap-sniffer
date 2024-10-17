@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 
-import classify.*;
+import model.*;
 import jpcap.packet.ARPPacket;
 import jpcap.packet.EthernetPacket;
 import jpcap.packet.IPPacket;

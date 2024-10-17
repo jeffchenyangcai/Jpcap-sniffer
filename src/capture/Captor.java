@@ -7,7 +7,7 @@ import java.util.List;
 import jpcap.*;
 import jpcap.packet.*;
 
-import classify.*;
+import model.*;
 
 public class Captor {
 
